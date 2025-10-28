@@ -1,0 +1,16 @@
+RewriteEngine On
+RewriteBase /ForumHub/
+
+# Redirect to public directory
+RewriteCond %{REQUEST_URI} !^/ForumHub/public/
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Prevent directory listing
+Options -Indexes
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
