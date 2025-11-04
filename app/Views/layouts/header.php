@@ -49,8 +49,16 @@
     <nav class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 fixed top-0 left-0 right-0 z-50 shadow-sm dark:shadow-lg transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-14 gap-3">
-                <!-- Left: Logo -->
-                <div class="flex items-center flex-shrink-0">
+                <!-- Left: Logo & Back Button -->
+                <div class="flex items-center flex-shrink-0 gap-2">
+                    <!-- Back Button -->
+                    <button onclick="window.history.back()" 
+                            class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 
+                                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                            title="Go Back">
+                        <i class="fas fa-arrow-left text-gray-600 dark:text-gray-300"></i>
+                    </button>
+                    
                     <a href="<?php echo url('/home'); ?>" 
                        class="flex items-center space-x-2 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 rounded-lg px-2 py-1">
                         <i class="fas fa-comments text-2xl text-[#FF4500]"></i>
@@ -115,6 +123,34 @@
                         <i class="fas fa-moon dark:hidden text-gray-600"></i>
                         <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
                     </button>
+                    
+                    <!-- Notifications -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                class="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+                                title="Notifications">
+                            <i class="fas fa-bell text-gray-600 dark:text-gray-300"></i>
+                            <span class="absolute -top-1 -right-1 bg-[#FF4500] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center notif-count" style="display: none;"></span>
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" 
+                             class="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 z-50 max-h-[500px] overflow-hidden flex flex-col"
+                             style="display: none;">
+                            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                                <h3 class="font-bold text-gray-900 dark:text-white">Notifications</h3>
+                                <button onclick="markAllNotificationsRead()" class="text-xs text-blue-600 hover:underline">
+                                    Mark all read
+                                </button>
+                            </div>
+                            <div id="notifications-list" class="overflow-y-auto flex-1">
+                                <div class="p-8 text-center text-gray-500">
+                                    <i class="fas fa-bell-slash text-3xl mb-2"></i>
+                                    <p>No notifications yet</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- Messages -->
                     <a href="<?php echo url('/messages'); ?>" 

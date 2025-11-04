@@ -7,18 +7,24 @@ use Models\Thread;
 use Models\Category;
 use Models\Post;
 use Models\User;
+use Models\ThreadLike;
+use Models\Notification;
 
 class ThreadController extends Controller {
     private $threadModel;
     private $categoryModel;
     private $postModel;
     private $userModel;
+    private $threadLikeModel;
+    private $notificationModel;
 
     public function __construct() {
         $this->threadModel = new Thread();
         $this->categoryModel = new Category();
         $this->postModel = new \Models\Post();
         $this->userModel = new User();
+        $this->threadLikeModel = new ThreadLike();
+        $this->notificationModel = new Notification();
     }
 
     /**
@@ -84,20 +90,27 @@ class ThreadController extends Controller {
         // Get posts
         $posts = $this->postModel->getByThread($id);
         
-        // Check if user has bookmarked
+        // Check if user has bookmarked and liked
         $isBookmarked = false;
+        $hasLiked = false;
         if ($this->isLoggedIn()) {
             $isBookmarked = $this->postModel->query(
                 "SELECT * FROM bookmarks WHERE user_id = ? AND thread_id = ?",
                 [$this->getUserId(), $id]
             );
+            $hasLiked = $this->threadLikeModel->hasLiked($id, $this->getUserId());
         }
+        
+        // Get likes count
+        $likesCount = $this->threadLikeModel->getLikesCount($id);
         
         $this->view('threads/show', [
             'title' => $thread['title'] . ' - ForumHub Pro',
             'thread' => $thread,
             'posts' => $posts,
-            'isBookmarked' => !empty($isBookmarked)
+            'isBookmarked' => !empty($isBookmarked),
+            'hasLiked' => $hasLiked,
+            'likesCount' => $likesCount
         ]);
     }
 
@@ -349,5 +362,60 @@ class ThreadController extends Controller {
         } else {
             $this->json(['success' => false, 'message' => 'Failed to submit report'], 500);
         }
+    }
+
+    /**
+     * Toggle like on thread
+     */
+    public function toggleLike() {
+        $this->requireAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
+            return;
+        }
+        
+        $threadId = $this->post('thread_id');
+        
+        if (!$threadId) {
+            $this->json(['success' => false, 'message' => 'Thread ID required'], 400);
+            return;
+        }
+        
+        $userId = $this->getUserId();
+        
+        // Check if thread exists
+        $thread = $this->threadModel->find($threadId);
+        if (!$thread) {
+            $this->json(['success' => false, 'message' => 'Thread not found'], 404);
+            return;
+        }
+        
+        // Check if already liked
+        $hasLiked = $this->threadLikeModel->hasLiked($threadId, $userId);
+        
+        if ($hasLiked) {
+            // Unlike
+            $this->threadLikeModel->unlike($threadId, $userId);
+            $liked = false;
+            $message = 'Like removed';
+        } else {
+            // Like
+            $this->threadLikeModel->like($threadId, $userId);
+            $liked = true;
+            $message = 'Thread liked';
+            
+            // Create notification for thread owner
+            $this->notificationModel->notifyThreadLike($threadId, $thread['user_id'], $userId);
+        }
+        
+        $likesCount = $this->threadLikeModel->getLikesCount($threadId);
+        
+        $this->json([
+            'success' => true,
+            'liked' => $liked,
+            'likes_count' => $likesCount,
+            'message' => $message
+        ]);
     }
 }

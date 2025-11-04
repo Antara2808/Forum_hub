@@ -50,6 +50,7 @@
 
 <!-- Custom Scripts -->
 <script src="<?php echo asset('js/app.js'); ?>"></script>
+<script src="<?php echo asset('js/thread-interactions.js'); ?>"></script>
 
 <script>
 // Theme Toggle

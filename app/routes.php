@@ -94,6 +94,17 @@ $router->post('/friends/remove', ['Controllers\FriendController', 'removeFriend'
 // ============================================
 $router->get('/api/search-users', ['Controllers\FriendController', 'searchUsers']);
 
+// Thread Interactions
+$router->post('/api/threads/like', ['Controllers\ThreadController', 'toggleLike']);
+$router->post('/api/threads/bookmark', ['Controllers\ThreadController', 'toggleBookmark']);
+
+// Notifications
+$router->get('/api/notifications', ['Controllers\NotificationController', 'index']);
+$router->get('/api/notifications/unread-count', ['Controllers\NotificationController', 'unreadCount']);
+$router->post('/api/notifications/:id/read', ['Controllers\NotificationController', 'markAsRead']);
+$router->post('/api/notifications/mark-all-read', ['Controllers\NotificationController', 'markAllAsRead']);
+$router->post('/api/notifications/:id/delete', ['Controllers\NotificationController', 'delete']);
+
 // ============================================
 // Report Routes
 // ============================================

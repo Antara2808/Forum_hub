@@ -7,18 +7,21 @@ use Models\Post;
 use Models\Thread;
 use Models\User;
 use Models\ReputationLog;
+use Models\Notification;
 
 class PostController extends Controller {
     private $postModel;
     private $threadModel;
     private $userModel;
     private $repLogModel;
+    private $notificationModel;
 
     public function __construct() {
         $this->postModel = new Post();
         $this->threadModel = new Thread();
         $this->userModel = new User();
         $this->repLogModel = new ReputationLog();
+        $this->notificationModel = new Notification();
     }
 
     /**
@@ -71,6 +74,9 @@ class PostController extends Controller {
                 'reference_type' => 'post',
                 'reference_id' => $postId
             ]);
+            
+            // Send notification to thread owner
+            $this->notificationModel->notifyThreadReply($threadId, $thread['user_id'], $this->getUserId(), $postId);
             
             setFlash('success', 'Reply posted successfully!');
         } else {

@@ -1,5 +1,13 @@
 -- Content Features Database Updates
 
+-- Create tags table for content tagging system
+CREATE TABLE tags (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_name (name)
+);
+
 -- Create thread_tags table for thread tagging system
 CREATE TABLE thread_tags (
     thread_id INT UNSIGNED NOT NULL,

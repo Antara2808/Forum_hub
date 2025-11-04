@@ -88,6 +88,36 @@
                     <div class="prose dark:prose-invert max-w-none">
                         <?php echo processContentWithMedia($thread['content']); ?>
                     </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <?php if (isLoggedIn()): ?>
+                            <!-- Like Button -->
+                            <button onclick="toggleThreadLike(<?php echo $thread['id']; ?>)" 
+                                    id="like-btn-<?php echo $thread['id']; ?>-main"
+                                    class="flex items-center space-x-2 px-4 py-2 rounded-lg transition-all <?php echo ($hasLiked ?? false) ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'; ?>">
+                                <i class="<?php echo ($hasLiked ?? false) ? 'fas' : 'far'; ?> fa-heart"></i>
+                                <span id="like-count-<?php echo $thread['id']; ?>-main"><?php echo $likesCount ?? 0; ?></span>
+                            </button>
+                            
+                            <!-- Share Button -->
+                            <button onclick="shareThread(<?php echo $thread['id']; ?>, '<?php echo addslashes($thread['title']); ?>')" 
+                                    class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-all">
+                                <i class="fas fa-share-alt"></i>
+                                <span>Share</span>
+                            </button>
+                            
+                            <!-- Bookmark Button -->
+                            <button onclick="toggleBookmark(<?php echo $thread['id']; ?>)" 
+                                    id="bookmark-btn-<?php echo $thread['id']; ?>-main"
+                                    class="flex items-center space-x-2 px-4 py-2 rounded-lg <?php echo ($isBookmarked ?? false) ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400' : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'; ?> transition-all">
+                                <i class="<?php echo ($isBookmarked ?? false) ? 'fas' : 'far'; ?> fa-bookmark"></i>
+                                <span><?php echo ($isBookmarked ?? false) ? 'Bookmarked' : 'Bookmark'; ?></span>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -235,167 +265,18 @@
                 </div>
                 <div class="card-body space-y-2">
                     <button onclick="toggleBookmark(<?php echo $thread['id']; ?>)" 
-                            id="bookmark-btn" 
+                            id="bookmark-btn-<?php echo $thread['id']; ?>-sidebar" 
                             class="w-full btn btn-secondary text-left">
-                        <i class="fas fa-bookmark" id="bookmark-icon"></i> 
-                        <span id="bookmark-text"><?php echo $isBookmarked ? 'Bookmarked' : 'Bookmark'; ?></span>
+                        <i class="<?php echo ($isBookmarked ?? false) ? 'fas' : 'far'; ?> fa-bookmark" id="bookmark-icon-<?php echo $thread['id']; ?>-sidebar"></i> 
+                        <span id="bookmark-text-<?php echo $thread['id']; ?>-sidebar"><?php echo ($isBookmarked ?? false) ? 'Bookmarked' : 'Bookmark'; ?></span>
                     </button>
-                    <button onclick="shareThread()" class="w-full btn btn-secondary text-left">
+                    <button onclick="shareThread(<?php echo $thread['id']; ?>, '<?php echo addslashes($thread['title']); ?>')" class="w-full btn btn-secondary text-left">
                         <i class="fas fa-share"></i> Share
-                    </button>
-                    <button onclick="reportThread(<?php echo $thread['id']; ?>)" class="w-full btn btn-secondary text-left">
-                        <i class="fas fa-flag"></i> Report
                     </button>
                 </div>
             </div>
             
-            <script>
-            // Bookmark functionality
-            let isBookmarked = <?php echo $isBookmarked ? 'true' : 'false'; ?>;
-            
-            async function toggleBookmark(threadId) {
-                try {
-                    const response = await fetch('<?php echo url('/threads/bookmark'); ?>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: `thread_id=${threadId}`
-                    });
-                    
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        isBookmarked = data.bookmarked;
-                        document.getElementById('bookmark-text').textContent = isBookmarked ? 'Bookmarked' : 'Bookmark';
-                        document.getElementById('bookmark-icon').className = isBookmarked ? 'fas fa-bookmark' : 'far fa-bookmark';
-                        Toast.success(data.message);
-                    } else {
-                        Toast.error(data.message);
-                    }
-                } catch (error) {
-                    Toast.error('Failed to toggle bookmark');
-                }
-            }
-            
-            // Share functionality
-            function shareThread() {
-                const url = window.location.href;
-                const title = <?php echo json_encode($thread['title']); ?>;
-                
-                if (navigator.share) {
-                    navigator.share({
-                        title: title,
-                        url: url
-                    }).catch(() => {
-                        copyToClipboard(url);
-                    });
-                } else {
-                    copyToClipboard(url);
-                }
-            }
-            
-            function copyToClipboard(text) {
-                navigator.clipboard.writeText(text).then(() => {
-                    Toast.success('Link copied to clipboard!');
-                }).catch(() => {
-                    Toast.error('Failed to copy link');
-                });
-            }
-            
-            // Report functionality
-            async function reportThread(threadId) {
-                const confirmed = await showConfirm({
-                    title: 'Report Thread',
-                    message: 'Are you sure you want to report this thread?',
-                    icon: '⚠️',
-                    confirmText: 'Report'
-                });
-                
-                if (!confirmed) return;
-                
-                // Show report reason dialog
-                const reasons = [
-                    { value: 'spam', label: 'Spam' },
-                    { value: 'abuse', label: 'Abuse' },
-                    { value: 'inappropriate', label: 'Inappropriate Content' },
-                    { value: 'harassment', label: 'Harassment' },
-                    { value: 'other', label: 'Other' }
-                ];
-                
-                const overlay = document.createElement('div');
-                overlay.className = 'confirm-overlay';
-                
-                const modal = document.createElement('div');
-                modal.className = 'confirm-modal';
-                modal.style.maxWidth = '500px';
-                
-                let reasonsHtml = reasons.map(r => 
-                    `<label class="block mb-2">
-                        <input type="radio" name="report_reason" value="${r.value}" class="mr-2">
-                        ${r.label}
-                    </label>`
-                ).join('');
-                
-                modal.innerHTML = `
-                    <h3 class="confirm-title">Report Reason</h3>
-                    <div class="mb-4">
-                        ${reasonsHtml}
-                    </div>
-                    <textarea id="report-description" placeholder="Additional details (optional)" 
-                              class="form-input mb-4" rows="3"></textarea>
-                    <div class="confirm-buttons">
-                        <button class="confirm-btn confirm-btn-cancel" data-action="cancel">Cancel</button>
-                        <button class="confirm-btn confirm-btn-confirm" data-action="submit">Submit Report</button>
-                    </div>
-                `;
-                
-                overlay.appendChild(modal);
-                document.body.appendChild(overlay);
-                
-                modal.addEventListener('click', async (e) => {
-                    if (e.target.dataset.action === 'submit') {
-                        const reason = modal.querySelector('input[name="report_reason"]:checked')?.value;
-                        const description = document.getElementById('report-description').value;
-                        
-                        if (!reason) {
-                            Toast.warning('Please select a reason');
-                            return;
-                        }
-                        
-                        overlay.remove();
-                        
-                        try {
-                            const response = await fetch('<?php echo url('/threads/report'); ?>', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded',
-                                },
-                                body: `thread_id=${threadId}&reason=${reason}&description=${encodeURIComponent(description)}`
-                            });
-                            
-                            const data = await response.json();
-                            
-                            if (data.success) {
-                                Toast.success(data.message);
-                            } else {
-                                Toast.error(data.message);
-                            }
-                        } catch (error) {
-                            Toast.error('Failed to submit report');
-                        }
-                    } else if (e.target.dataset.action === 'cancel') {
-                        overlay.remove();
-                    }
-                });
-                
-                overlay.addEventListener('click', (e) => {
-                    if (e.target === overlay) {
-                        overlay.remove();
-                    }
-                });
-            }
-            </script>
+
             <?php endif; ?>
             
             <!-- Similar Threads -->

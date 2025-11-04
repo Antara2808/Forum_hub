@@ -69,14 +69,14 @@
                         </a>
                         <?php endif; ?>
                         
-                        <?php if ($user['linkedin']): ?>
+                        <?php if (!empty($user['linkedin'])): ?>
                         <a href="https://linkedin.com/in/<?php echo e($user['linkedin']); ?>" target="_blank" 
                            class="text-blue-700 hover:underline">
                             <i class="fab fa-linkedin"></i> LinkedIn
                         </a>
                         <?php endif; ?>
                         
-                        <?php if ($user['instagram']): ?>
+                        <?php if (!empty($user['instagram'])): ?>
                         <a href="https://instagram.com/<?php echo e($user['instagram']); ?>" target="_blank" 
                            class="text-pink-500 hover:underline">
                             <i class="fab fa-instagram"></i> Instagram
